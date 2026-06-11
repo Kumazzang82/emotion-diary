@@ -270,10 +270,12 @@ function EntryDetail({ entry, onClose, onDelete, onEdit }: {
   onDelete: (id: string) => void;
   onEdit: (entry: DiaryEntry) => void;
 }) {
+  const [imgError, setImgError] = useState(false);
+
   const handleDelete = () => {
     if (window.confirm("이 일기를 삭제할까요?")) onDelete(entry.id);
   };
-  const hasImage = !!entry.imageUrl;
+  const hasImage = !!entry.imageUrl && !imgError;
   const gradient = DETAIL_GRADIENTS[entry.mood ?? ""] ?? "from-violet-200 via-rose-100 to-amber-50";
 
   return (
@@ -311,6 +313,16 @@ function EntryDetail({ entry, onClose, onDelete, onEdit }: {
         <div className="max-w-md mx-auto px-4 pt-5 pb-16 space-y-5">
 
           {/* 일기 카드 — 앨범 커버 히어로 */}
+          {/* 이미지 URL 유효성 감지 — CSS backgroundImage는 onError를 지원하지 않으므로 hidden img로 처리 */}
+          {entry.imageUrl && !imgError && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={entry.imageUrl}
+              alt=""
+              style={{ display: "none" }}
+              onError={() => setImgError(true)}
+            />
+          )}
           <div
             className="relative w-full rounded-2xl overflow-hidden shadow-xl"
             style={{
@@ -319,6 +331,11 @@ function EntryDetail({ entry, onClose, onDelete, onEdit }: {
             }}
           >
             {!hasImage && <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />}
+            {imgError && (
+              <div className="absolute top-4 right-5 z-20 flex items-center gap-1 px-2 py-1 rounded-lg bg-stone-200/70 backdrop-blur-sm">
+                <span className="text-[10px] text-stone-500">이미지 만료됨</span>
+              </div>
+            )}
 
             {/* 바텀-업 그라디언트 */}
             <div className={`absolute inset-0 ${
