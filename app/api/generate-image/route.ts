@@ -176,29 +176,11 @@ Art style requirements:
       const item = (response.data ?? [])[0];
       if (!item) break;
 
-      const revisedPrompt = (item as { revised_prompt?: string }).revised_prompt ?? prompt;
-
-      // 임시 URL을 base64로 변환해 저장 — DALL-E URL은 ~1시간 후 만료됨
-      if (item.url) {
-        try {
-          const imgFetch = await fetch(item.url);
-          const buf = await imgFetch.arrayBuffer();
-          const b64 = Buffer.from(buf).toString("base64");
-          const ct = imgFetch.headers.get("content-type") ?? "image/png";
-          return NextResponse.json({
-            imageUrl: `data:${ct};base64,${b64}`,
-            imagePrompt: revisedPrompt,
-            source: model,
-          });
-        } catch {
-          // 변환 실패 시 만료 URL 그대로 반환 (fallback)
-          return NextResponse.json({
-            imageUrl: item.url,
-            imagePrompt: revisedPrompt,
-            source: model,
-          });
-        }
-      }
+      return NextResponse.json({
+        imageUrl: item.url ?? null,
+        imagePrompt: (item as { revised_prompt?: string }).revised_prompt ?? prompt,
+        source: model,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
       if (!isAccessError(message)) {

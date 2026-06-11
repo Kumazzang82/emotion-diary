@@ -254,14 +254,21 @@ export default function DiaryHistory({ entries, onClose, onDelete, onEdit }: Pro
 
 // ─── 상세 보기 ───────────────────────────────────────────
 
-const DETAIL_GRADIENTS: Record<string, string> = {
-  happy:   "from-amber-200  via-yellow-100  to-orange-50",
-  sad:     "from-blue-200   via-sky-100     to-indigo-50",
-  angry:   "from-rose-200   via-red-100     to-orange-50",
-  anxious: "from-violet-200 via-purple-100  to-pink-50",
-  tired:   "from-stone-200  via-stone-100   to-stone-50",
-  love:    "from-pink-200   via-rose-100    to-fuchsia-50",
-  calm:    "from-teal-200   via-emerald-100 to-cyan-50",
+type PlaceholderStyle = { bg: string; blob1: string; blob2: string };
+
+const MOOD_PLACEHOLDER: Record<string, PlaceholderStyle> = {
+  happy:   { bg: "from-amber-400 via-yellow-300 to-orange-300",   blob1: "rgba(253,224,71,0.55)",  blob2: "rgba(249,115,22,0.4)"  },
+  sad:     { bg: "from-indigo-500 via-blue-400 to-sky-300",       blob1: "rgba(99,102,241,0.45)",  blob2: "rgba(56,189,248,0.35)" },
+  angry:   { bg: "from-rose-600 via-red-500 to-orange-400",       blob1: "rgba(239,68,68,0.55)",   blob2: "rgba(251,146,60,0.4)"  },
+  anxious: { bg: "from-violet-500 via-purple-400 to-pink-300",    blob1: "rgba(167,139,250,0.5)",  blob2: "rgba(249,168,212,0.4)" },
+  tired:   { bg: "from-slate-500 via-stone-400 to-zinc-400",      blob1: "rgba(100,116,139,0.5)",  blob2: "rgba(113,113,122,0.4)" },
+  love:    { bg: "from-pink-500 via-rose-400 to-fuchsia-300",     blob1: "rgba(236,72,153,0.5)",   blob2: "rgba(217,70,239,0.4)"  },
+  calm:    { bg: "from-teal-500 via-emerald-400 to-cyan-300",     blob1: "rgba(45,212,191,0.5)",   blob2: "rgba(34,211,238,0.4)"  },
+};
+const DEFAULT_PLACEHOLDER: PlaceholderStyle = {
+  bg:    "from-violet-400 via-rose-300 to-amber-200",
+  blob1: "rgba(167,139,250,0.45)",
+  blob2: "rgba(251,207,232,0.4)",
 };
 
 function EntryDetail({ entry, onClose, onDelete, onEdit }: {
@@ -270,13 +277,10 @@ function EntryDetail({ entry, onClose, onDelete, onEdit }: {
   onDelete: (id: string) => void;
   onEdit: (entry: DiaryEntry) => void;
 }) {
-  const [imgError, setImgError] = useState(false);
-
   const handleDelete = () => {
     if (window.confirm("이 일기를 삭제할까요?")) onDelete(entry.id);
   };
-  const hasImage = !!entry.imageUrl && !imgError;
-  const gradient = DETAIL_GRADIENTS[entry.mood ?? ""] ?? "from-violet-200 via-rose-100 to-amber-50";
+  const ph = MOOD_PLACEHOLDER[entry.mood ?? ""] ?? DEFAULT_PLACEHOLDER;
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-[#FAF8F5]">
@@ -312,56 +316,51 @@ function EntryDetail({ entry, onClose, onDelete, onEdit }: {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-md mx-auto px-4 pt-5 pb-16 space-y-5">
 
-          {/* 일기 카드 — 앨범 커버 히어로 */}
-          {/* 이미지 URL 유효성 감지 — CSS backgroundImage는 onError를 지원하지 않으므로 hidden img로 처리 */}
-          {entry.imageUrl && !imgError && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={entry.imageUrl}
-              alt=""
-              style={{ display: "none" }}
-              onError={() => setImgError(true)}
-            />
-          )}
+          {/* 감정 카드 — 그라디언트 플레이스홀더 */}
           <div
             className="relative w-full rounded-2xl overflow-hidden shadow-xl"
-            style={{
-              minHeight: "min(50vh, 420px)",
-              ...(hasImage ? { backgroundImage: `url(${entry.imageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : {}),
-            }}
+            style={{ minHeight: "min(50vh, 420px)" }}
           >
-            {!hasImage && <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />}
-            {imgError && (
-              <div className="absolute top-4 right-5 z-20 flex items-center gap-1 px-2 py-1 rounded-lg bg-stone-200/70 backdrop-blur-sm">
-                <span className="text-[10px] text-stone-500">이미지 만료됨</span>
-              </div>
-            )}
+            {/* 베이스 그라디언트 */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${ph.bg}`} />
 
-            {/* 바텀-업 그라디언트 */}
-            <div className={`absolute inset-0 ${
-              hasImage
-                ? "bg-gradient-to-t from-black/90 via-black/20 to-transparent"
-                : "bg-gradient-to-t from-black/35 via-transparent to-transparent"
-            }`} />
+            {/* 장식용 블롭 — 깊이감 연출 */}
+            <div
+              className="absolute -top-14 -right-14 w-64 h-64 rounded-full blur-3xl pointer-events-none"
+              style={{ background: ph.blob1 }}
+            />
+            <div
+              className="absolute -bottom-10 -left-10 w-44 h-44 rounded-full blur-2xl pointer-events-none"
+              style={{ background: ph.blob2 }}
+            />
+            <div
+              className="absolute top-1/2 left-1/4 w-32 h-32 rounded-full blur-3xl pointer-events-none opacity-40"
+              style={{ background: ph.blob2 }}
+            />
+
+            {/* 이모지 워터마크 */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+              <span className="text-[9rem] leading-none opacity-[0.07]">{entry.moodEmoji}</span>
+            </div>
+
+            {/* 바텀업 다크 오버레이 — 텍스트 가독성 */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
             {/* 날짜 — 상단 좌측 */}
             <div className="absolute top-4 left-5 z-10">
-              <p className={`text-xs font-medium ${hasImage ? "text-white/50" : "text-stone-400"}`}>
-                {entry.dateLabel}
-              </p>
+              <p className="text-xs font-medium text-white/55">{entry.dateLabel}</p>
             </div>
 
             {/* 콘텐츠: 하단 정렬 */}
-            <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-6 pt-12"
+            <div
+              className="relative z-10 flex flex-col justify-end h-full px-5 pb-6 pt-12"
               style={{ minHeight: "min(50vh, 420px)" }}
             >
               <div className="flex items-center gap-2 mb-2.5">
                 <span className="text-2xl">{entry.moodEmoji}</span>
-                <span className={`text-base font-bold ${hasImage ? "text-white/95" : "text-stone-800"}`}>
-                  {entry.moodLabel || "기록"}
-                </span>
+                <span className="text-base font-bold text-white/95">{entry.moodLabel || "기록"}</span>
               </div>
-              <p className={`text-sm leading-relaxed whitespace-pre-wrap ${hasImage ? "text-white/85" : "text-stone-700"}`}>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-white/85">
                 {entry.diaryText}
               </p>
             </div>

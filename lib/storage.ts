@@ -27,21 +27,13 @@ export function loadEntries(): DiaryEntry[] {
 }
 
 export function saveEntry(entry: DiaryEntry): void {
-  const existing = loadEntries();
-  const entries = [entry, ...existing];
+  const entries = [entry, ...loadEntries()];
   try {
     localStorage.setItem(KEY, JSON.stringify(entries));
   } catch {
-    // 용량 초과 시 기존 항목의 이미지만 제거하고 신규 항목 이미지 보존
     try {
-      const reduced = [entry, ...existing.map((e) => ({ ...e, imageUrl: null }))];
-      localStorage.setItem(KEY, JSON.stringify(reduced));
-    } catch {
-      // 여전히 실패 시 신규 항목 포함 전체 이미지 제거
-      try {
-        localStorage.setItem(KEY, JSON.stringify(entries.map((e) => ({ ...e, imageUrl: null }))));
-      } catch {}
-    }
+      localStorage.setItem(KEY, JSON.stringify(entries.map((e) => ({ ...e, imageUrl: null }))));
+    } catch {}
   }
 }
 
@@ -50,15 +42,9 @@ export function updateEntry(entry: DiaryEntry): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(entries));
   } catch {
-    // 용량 초과 시 수정 대상 항목 이미지는 보존하고 나머지 제거
     try {
-      const reduced = entries.map((e) => e.id === entry.id ? e : { ...e, imageUrl: null });
-      localStorage.setItem(KEY, JSON.stringify(reduced));
-    } catch {
-      try {
-        localStorage.setItem(KEY, JSON.stringify(entries.map((e) => ({ ...e, imageUrl: null }))));
-      } catch {}
-    }
+      localStorage.setItem(KEY, JSON.stringify(entries.map((e) => ({ ...e, imageUrl: null }))));
+    } catch {}
   }
 }
 

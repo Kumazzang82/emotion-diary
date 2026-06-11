@@ -127,7 +127,7 @@ export default function Home() {
       moodEmoji: moodData?.emoji ?? "📝",
       moodLabel: moodData?.label ?? "",
       diaryText,
-      imageUrl: result.imageUrl ?? null,
+      imageUrl: null,
       themes: analysis.themes,
       keywords: analysis.keywords,
       songs: result.songs ?? [],
